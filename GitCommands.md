@@ -33,3 +33,6 @@ git pull
 ```
 Sometimes there are merge conflicts. It's easier to google the best way to resolve this.
 Most of the time you will end up manually merging it.
+
+### Undo/revert stuff
+https://github.com/blog/2019-how-to-undo-almost-anything-with-git
