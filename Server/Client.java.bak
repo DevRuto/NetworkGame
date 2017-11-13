@@ -1,0 +1,29 @@
+import java.net.Socket;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+public class Client extends Thread {
+	private Socket socket;
+	private PrintWriter writer;
+	private String name;
+
+	public Client(Socket socket, String identifier) {
+		this.socket = socket;
+		this.name = identifier;
+	}
+
+	@Override
+	public void run() {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		String line;
+		while ((line = reader.readLine()) != null) {
+			
+		}
+	}
+
+	public void write(String s) {
+		writer.write(s);
+		writer.flush();
+	}
+}
