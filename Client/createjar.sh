@@ -1,2 +1,2 @@
 javac *.java
-jar cvfe server.jar MemoryGame *.class
+jar cvfe Client.jar MemoryGame *.class
