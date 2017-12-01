@@ -1,2 +1,2 @@
 javac *.java
-jar cvfe server.jar GameServer *.class
+jar cvfe Server.jar GameServer *.class
