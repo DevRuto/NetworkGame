@@ -68,6 +68,7 @@ public class MemoryGame extends JFrame implements ActionListener {
    private PrintWriter writer;
    private ReadThread readerThread;
    private DataOutputStream dos;
+   private String ip;
    public static final int NAME = 0;
    public static final int BOARD_NUMBERS = 1;
    public static final int JOIN_LOBBY = 2;
@@ -104,6 +105,11 @@ public class MemoryGame extends JFrame implements ActionListener {
       JOptionPane.showMessageDialog(this, "Instructions:  " +
                                    "Click on two of the buttons and if they have the same value you gain a point. " +
                                    "Clear the board and the player with the most matches wins.");
+                                   
+      ip = (String)JOptionPane.showInputDialog(this,
+                    "Type server IP",
+                    "127.0.0.1");
+                    
    
       //Creates a for loop that adds the cards randomly on the board
    
@@ -424,7 +430,7 @@ public class MemoryGame extends JFrame implements ActionListener {
    
    private void initConn() {
       try {
-         socket = new Socket("129.21.140.25", 12345);
+         socket = new Socket(ip, 12345);
          readerThread = new ReadThread(socket.getInputStream());
          readerThread.start();
          
