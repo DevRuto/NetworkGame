@@ -16,6 +16,7 @@ import java.io.*;
 import java.net.Socket;
 import javafx.scene.input.Mnemonic;
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 
 
 
@@ -75,7 +76,7 @@ public class MemoryGame extends JFrame implements ActionListener {
    public static final int MOVE_INT = 3;
    public static final int MSG = 4;
    
-   private JButton jbReset  = new JButton("Reset");
+   //private JButton jbReset  = new JButton("Reset");
    private JButton jbExit  = new JButton("Exit");
    private JButton jbHelp  = new JButton("Help");
    private JButton[] jbList = new JButton[64];
@@ -146,7 +147,7 @@ public class MemoryGame extends JFrame implements ActionListener {
        * add the buttons to the jpSubnorth, then add it to the jpNorth
        */
       JPanel jpSubnorth = new JPanel();
-      jpSubnorth.add(jbReset);
+      //jpSubnorth.add(jbReset);
       jpSubnorth.add(jbExit);
       jpSubnorth.add(jbHelp);
       jpNorth.add(textNorth);
@@ -208,10 +209,15 @@ public class MemoryGame extends JFrame implements ActionListener {
       c.anchor = GridBagConstraints.PAGE_END;
       chat.add(sendBtn, c);
         
-        // Add chat box
+         // Add chat box
       chatArea = new JTextArea();
       chatArea.setEditable(false);
+      
+         // Auto-scroll to keep updating the chatArea
+      DefaultCaret caret = (DefaultCaret)chatArea.getCaret();
+      caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
       JScrollPane spane = new JScrollPane(chatArea);
+      
       chatArea.setBackground(Color.GRAY);
       c.fill = GridBagConstraints.BOTH;
       c.insets = new Insets(10, 10, -45, 10);
@@ -247,14 +253,14 @@ public class MemoryGame extends JFrame implements ActionListener {
             }
          });
       // reset button
-      jbReset.addActionListener(
-         new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-               new MemoryGame();
-               setVisible(false);
-               Collections.shuffle(cardValues);
-            }
-         });
+      // jbReset.addActionListener(
+//          new ActionListener() {
+//             public void actionPerformed(ActionEvent ae) {
+//                new MemoryGame();
+//                setVisible(false);
+//                Collections.shuffle(cardValues);
+//             }
+//          });
       // help button
       jbHelp.addActionListener(
          new ActionListener() {
@@ -558,5 +564,4 @@ public class MemoryGame extends JFrame implements ActionListener {
       }
    }
 }
-
 
