@@ -17,8 +17,10 @@ class GameServer {
     }
 
     public GameServer(int port) {
-                        for (int i = 0; i < 64; i++)
+                        for (int i = 0; i < 32; i++){
                             boardNums.add(i);
+                            boardNums.add(i);
+                        }
                         // Shuffle numbers
                         Collections.shuffle(boardNums);
         try {
