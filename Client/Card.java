@@ -22,6 +22,9 @@ public class Card extends JComponent implements MouseListener {
     private int x, y, width, height;
     private boolean halfPoint = false;
     private boolean running = false;
+    private ActionEvent ae = new ActionEvent(this,3,"string");
+    private Color downColor = Color.red;
+    private Color upColor = Color.blue;
 
     /**
      * Set up the card layout
@@ -37,6 +40,11 @@ public class Card extends JComponent implements MouseListener {
         addMouseListener(this);
     }
 
+public void setUpColor(Color c){
+   upColor = c;
+
+
+}
     /**
      * The identifier of the card
      * @param id The identifier of the card
@@ -113,7 +121,7 @@ public class Card extends JComponent implements MouseListener {
         label.setVisible(true);
 
         // Draw background
-        g.setColor(label.isVisible() ? Color.orange : Color.red);
+        g.setColor(label.isVisible() ? upColor : downColor);
         g.fillRect(x, y, width, height);
 
         // Set border color
@@ -140,7 +148,7 @@ public class Card extends JComponent implements MouseListener {
     @Override
     public void mouseClicked(MouseEvent e) {
         for (ActionListener listener : actionListeners)
-            listener.actionPerformed(null);
+            listener.actionPerformed(ae);
         flip();
     }
 
@@ -196,5 +204,6 @@ public class Card extends JComponent implements MouseListener {
 
             repaint();
         }
+        
     }
 }
