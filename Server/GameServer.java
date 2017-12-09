@@ -16,13 +16,28 @@ class GameServer {
         server.start();
     }
 
+    Client currentTurn=null;
+
+    public boolean MakeTurn(int board, Client client)
+    {
+		return false;
+    }
+    
+
     public GameServer(int port) {
-                        for (int i = 0; i < 32; i++){
-                            boardNums.add(i);
-                            boardNums.add(i);
-                        }
-                        // Shuffle numbers
-                        Collections.shuffle(boardNums);
+    	
+    	int debug =0;
+    	
+        for (int i = 0; i < 32-debug; i++){
+            boardNums.add(i);
+            boardNums.add(i);
+        }
+        for (int i = 0; i < debug; i++){
+            boardNums.add(-1);
+            boardNums.add(-1);
+        }
+        // Shuffle numbers
+        Collections.shuffle(boardNums);
         try {
             server = new ServerSocket(port);
         } catch (IOException e) {
@@ -50,30 +65,175 @@ class GameServer {
         }
     }
 
+    private Client GetNext(Client client)
+    {
+        if(0==clients.size())
+        	return null;
+
+        int index = clients.indexOf(client);
+        
+        return clients.get((index+1)%clients.size());
+    }
+    
     private void handleConnected (Client client) {
         synchronized (clients) {
+        	
+        	if(null==currentTurn)
+        		currentTurn=client;
+        	
             clients.add(client);
             client.setIdentifier("Player#" + clients.size());
-            broadcast(client.getIdentifier() + " has connected");
+            broadcast(Protocol.MESSAGE,client.getIdentifier() + " has connected");
+            
+            
+            if(currentTurn==client)
+            	client.writeInt(Protocol.MY_TURN);
+
+    	    SendScores();
+
         }
     }
 
     private void handleDisconnected(Client client) {
         synchronized (clients) {
             if (clients.contains(client)) {
+            	
+            	if(client==currentTurn)
+            	{
+            		currentTurn=GetNext(currentTurn);
+
+            		currentTurn.writeInt(Protocol.MY_TURN);
+            	}
+            	
                 clients.remove(client);
                 ids.remove(client.getIdentifier());
+
+                if(client==currentTurn)
+                	currentTurn=null;
+                
+        	    SendScores();
             }
-            broadcast(client.getIdentifier() + " has disconnected");
+            broadcast(Protocol.MESSAGE,client.getIdentifier() + " has disconnected");
         }
     }
 
-    private void broadcast(String text) {
-        broadcastInt(Protocol.MESSAGE);
+
+    private void SendScores()
+    {
+		
+	    synchronized (clients) {
+            for (Client c : clients) {
+
+            	c.writeInt(Protocol.SCORES);
+
+            	for(int i=0;i<4;i++)
+				{
+					if(clients.size()>i)
+					{
+						c.writeInt(clients.get(i).score);
+						c.writeUTF(clients.get(i).getIdentifier());
+					}    
+					else
+					{
+						c.writeInt(-1);
+						c.writeUTF("");
+					} 
+				}
+				
+            }
+	    }
+    }
+
+    private boolean MakeTurn(int moveIndex1, int moveIndex2,Client client)
+    {
+	    synchronized (clients) {
+	    	
+	    	//client found the right pair
+	    	if(
+	    		boardNums.get(moveIndex1)==boardNums.get(moveIndex2)
+	    	)
+	    	{
+	    		client.score++;
+	
+	    		broadcastInt(Protocol.SHOW_PAIR);
+	    		broadcastInt(moveIndex1);
+	            broadcastInt(moveIndex2);
+	
+	
+	            ///mark numbers as already open
+	            boardNums.set(moveIndex1,-1);
+	            boardNums.set(moveIndex2,-1);
+	    	}
+	    	else
+	    	{//bad pair
+	
+	            try {///so wait some time and tell client to hide pair
+	                Thread.sleep(1000);
+	            } catch (InterruptedException e){}
+	            
+	            client.writeInt(Protocol.HIDE_PAIR);
+	            client.writeInt(moveIndex1);
+	            client.writeInt(moveIndex2);    		
+	    	}
+	    	
+	        
+	        //go to next player
+			currentTurn=GetNext(currentTurn);
+			currentTurn.writeInt(Protocol.MY_TURN);
+	
+	    }
+	    
+	    SendScores();
+	    
+        boolean gameOver=true;
+	    
+        for(int i=0;i<boardNums.size();i++)
+        {
+        	if(boardNums.get(i)!=-1)
+        		gameOver=false;
+        }
+        
+        if(gameOver)
+        {
+	        String winners="";
+	        int maxScore=0;
+	        boolean draw=false;
+            for (Client c : clients) {
+            	
+            	if(c.score>maxScore)
+            	{
+            		winners=c.getIdentifier();
+            		maxScore=c.score;
+            		draw=false;
+            	}
+            	else
+            	if(c.score==maxScore)
+            	{
+            		winners=winners+", "+c.getIdentifier();
+            		draw=true;
+            	}
+            }
+
+	        if(draw)
+	        	broadcast(Protocol.STATE,"Draw between "+winners);
+	        else
+	        	broadcast(Protocol.STATE,"Winner "+winners);
+	        
+        }
+        else
+        {
+        	broadcast(Protocol.STATE,"Current Turn "+currentTurn.getIdentifier());
+        }
+        
+	    
+	    return true;
+    }
+    
+    private void broadcast(int type,String text) {
         System.out.printf("BROADCASTING: %s%n", text);
         synchronized (clients) {
             for (Client c : clients) {
-                c.write(text);
+                c.write(type,text);
             }
         }
     }
@@ -99,9 +259,12 @@ class GameServer {
         private Socket socket;
         private DataOutputStream writer;
         private String identifier;
+        
+        public int score;
 
         public Client(Socket socket) throws IOException {
             this.socket = socket;
+            this.score=0;
             writer = new DataOutputStream(socket.getOutputStream());
             handleConnected(this);
         }
@@ -127,7 +290,8 @@ class GameServer {
                     System.out.printf("%s: CODE: %d%n", identifier, code);
                     switch (code) {
                     case Protocol.BOARD_NUMBERS:
-                        broadcast(String.format("[%s RECEIVED BOARD NUMBERS]", identifier));
+
+                    	broadcast(Protocol.MESSAGE,String.format("[%s RECEIVED BOARD NUMBERS]", identifier));
                         // TODO: CHECK LOBBY
                         // DEFUALT SIZE 64
                         int size = 64; //reader.readInt();
@@ -140,20 +304,25 @@ class GameServer {
                         }
                         break;
                     case Protocol.NAME:
-                        identifier = reader.readUTF();
-                        if (ids.contains(identifier)) {
+                        String newidentifier = reader.readUTF();
+                        if (ids.contains(newidentifier)) {
                             // Name exists, find new name
-                            identifier = null;
-                            writeInt(Protocol.NAME);
-                            write("Name in use");
+                            write(Protocol.MESSAGE,"Name "+newidentifier+" in use");
                         } else {
                             // other ids are synchronized in clients
                             // so we continue to sync on it
                             synchronized (clients) {
-                                ids.add(identifier);
+                                ids.add(newidentifier);
                             }
-                            writeInt(Protocol.NAME);
-                            write("Name registered");
+
+                            
+                        	broadcast(Protocol.MESSAGE,"Name "+identifier+" renamed to "+newidentifier);
+
+                            identifier=newidentifier;                            
+                            
+                            write(Protocol.STATE,identifier);
+                        	
+                            SendScores();
                         }
                         break;
                     case Protocol.JOIN_LOBBY:
@@ -169,14 +338,19 @@ class GameServer {
                             broadcastInt(-1);
                         }
                         break;
-                    case Protocol.MOVE_TURN:
-                        broadcastInt(Protocol.MOVE_TURN);
-                        int moveindex = reader.readInt();
-                        broadcastInt(moveindex);
-                        broadcast(String.format("[%s SENT MOVE, RECEIVED INDEX: %d]", identifier, moveindex));
-                        break;
+                        
+
+                    case Protocol.MOVE_PAIR:
+                    {
+                        int moveIndex1 = reader.readInt();
+                        int moveIndex2 = reader.readInt();
+                        MakeTurn(moveIndex1,moveIndex2,this);
+                    }
+                    break;
+
+
                     case Protocol.MESSAGE:
-                        broadcast(identifier + ": " + reader.readUTF());
+                        broadcast(Protocol.MESSAGE,getIdentifier() + ": " + reader.readUTF());
                         break;
                     }
                 }
@@ -188,8 +362,9 @@ class GameServer {
             }
         }
 
-        public synchronized void write(String text) {
+        public synchronized void write(int type,String text) {
             try {
+                writer.writeInt(type);
                 writer.writeUTF(text);
             } catch (Exception ex) {
                 System.out.println("Error occured for " + identifier);
@@ -200,6 +375,15 @@ class GameServer {
         public synchronized void writeInt(int i) {
             try {
                 writer.writeInt(i);
+            } catch (Exception ex) {
+                System.out.println("Error occured for " + identifier);
+                ex.printStackTrace();
+            }
+        }
+
+        public synchronized void writeUTF(String i) {
+            try {
+                writer.writeUTF(i);
             } catch (Exception ex) {
                 System.out.println("Error occured for " + identifier);
                 ex.printStackTrace();
