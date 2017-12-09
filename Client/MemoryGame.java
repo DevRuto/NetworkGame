@@ -14,11 +14,9 @@ import javax.swing.JPanel;
 import java.awt.Color;
 import java.io.*;
 import java.net.Socket;
-import javafx.scene.input.Mnemonic;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.event.*;
-
 /**
  * A memory game where two players compete
  * to match as many cards as possible
@@ -27,20 +25,17 @@ import java.awt.event.*;
  * @since 2017-12-08
  * @version 1.0
  */
+
 public class MemoryGame extends JFrame implements ActionListener {
    //Attributes
    private List<Card> cards = new ArrayList<Card>();
-   private Card selectedCard;
-   private Card card1;
-   private Card card2;
+   private Card card1=null;
+
    private Timer timer;
    private java.util.Timer cardTimer = new java.util.Timer();
    private JLabel turn;
    private int player = 1;
-   private int player1Score = 0;
-   private int player2Score = 0;
-   private int player3Score = 0;
-   private int player4Score = 0;
+
    
    private JTextField player1S = new JTextField(3);
    private JTextField player2S = new JTextField(3);
@@ -65,26 +60,43 @@ public class MemoryGame extends JFrame implements ActionListener {
    private ReadThread readerThread;
    private DataOutputStream dos;
    private String ip;
-   public static final int NAME = 0;
-   public static final int BOARD_NUMBERS = 1;
-   public static final int JOIN_LOBBY = 2;
-   public static final int MOVE_INT = 3;
-   public static final int MSG = 4;
-   public static final int TURN = 5;
-   public static final int SCORE = 6;
+
+	public static final int NAME = 0;
+	public static final int BOARD_NUMBERS = 1;
+	public static final int JOIN_LOBBY = 2;
+
+	
+	public static final int MESSAGE = 4;
+	
+	
+	public static final int SCORES= 5;
+	public static final int WON= 6;
+	public static final int MY_TURN= 7;
+
+	
+	public static final int MOVE_PAIR = 10;
+	public static final int SHOW_PAIR = 11;
+	public static final int HIDE_PAIR = 12;
+	public static final int STATE = 13;
+	
+	
+
+	public static final int ERROR= 100;
+
+   
    public static final Color [] playerColors = {Color.BLUE,Color.GREEN,Color.ORANGE,Color.CYAN};
    //private JButton jbReset  = new JButton("Reset");
+   private JLabel statelabel;
    private JButton jbExit  = new JButton("Exit");
    private JButton jbHelp  = new JButton("Help");
+   private JButton jbName = new JButton("Change Your Name");
    private JButton[] jbList = new JButton[64];
    private int[] setUp;
    private  List<Integer> cardValues = new ArrayList<Integer>();
    private ActionListener acl_Card = 
       new ActionListener() { 
          public void actionPerformed(ActionEvent ae) {
-            selectedCard = (Card) ae.getSource();
-            selectedCard.setUpColor(currentColor);
-            doTurn();
+            doTurn((Card) ae.getSource());
             System.out.println("this works");
          }
       };
@@ -153,6 +165,7 @@ public class MemoryGame extends JFrame implements ActionListener {
       JPanel jpSubnorth = new JPanel();
       //jpSubnorth.add(jbReset);
       jpSubnorth.add(jbExit);
+      jpSubnorth.add(jbName);
       jpSubnorth.add(jbHelp);
       jpNorth.add(textNorth);
       jpNorth.setEnabled(false);
@@ -162,7 +175,8 @@ public class MemoryGame extends JFrame implements ActionListener {
       * add the JLabel to subsouth, then add it to the jpNorth
       */
       JPanel jpSubsouth = new JPanel();
-      jpSubsouth.add(new JLabel("Start to play the game", JLabel.CENTER));
+      statelabel = new JLabel("Start to play the game", JLabel.CENTER);
+      jpSubsouth.add(statelabel);
       jpNorth.add(jpSubsouth, BorderLayout.SOUTH);
       // add the main JPanel to JFrame
       add(jpNorth, BorderLayout.NORTH);
@@ -241,12 +255,34 @@ public class MemoryGame extends JFrame implements ActionListener {
       add(jpCenter, BorderLayout.CENTER);
       // add(chat, BorderLayout.EAST);
       
-   
+
       // Exit button
       jbExit.addActionListener(
          new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                System.exit(0);
+            }
+         });
+      
+      // Name button
+      jbName.addActionListener(
+         new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+
+            	String res = JOptionPane.showInputDialog(
+                        "Type Name",
+                        "");
+            	
+            	if(res.length()>0)
+            	{
+                    try {
+						dos.writeInt(NAME);
+	                    dos.writeUTF(res);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	}
             }
          });
    
@@ -272,7 +308,7 @@ public class MemoryGame extends JFrame implements ActionListener {
          return;
       
       try{
-         dos.writeInt(MSG);
+         dos.writeInt(MESSAGE);
          dos.writeUTF(messageBox.getText());
       }
       catch(IOException ioe){
@@ -283,140 +319,59 @@ public class MemoryGame extends JFrame implements ActionListener {
       messageBox.requestFocus();
    }
 
-
+   
+   boolean myTurn=false;
+   
    /**
     * A method that checks if the cards match
     */
-   public void doTurn() {
+   public void doTurn(Card selectedCard) {
    
-      int index = cards.indexOf(selectedCard);
-      try{
-         dos.writeInt(MOVE_INT);
-         dos.writeInt(index);
-      }
-      catch(IOException ioe){
-         ioe.printStackTrace();
-      }
-      
-      if (card1 == null && card2 == null) {
+	   if(!myTurn)
+		   return;
+	   
+	   ///already matched
+	   if(selectedCard.getMatched())
+		   return;
+       
+      if (card1 == null) {
+         selectedCard.setText(String.valueOf(selectedCard.getId()));
          card1 = selectedCard;
-         card1.setText(String.valueOf(card1.getId()));
-      }
-      if (card1 != null && card1 != selectedCard && card2 == null) {
-         card2 = selectedCard;
-         card2.setText(String.valueOf(card2.getId()));
-         timer.start();
-            new Thread() {
-               @Override
-               public void run() {
-               // Delay for animation
-                  try {
-                     Thread.sleep(1000);
-                  } catch (InterruptedException e){}
-                  changePlayer();
-               }
-            }.start();
-      }
-   }
+         selectedCard.setUpColor(currentColor);
+         card1.flip(true);
 
-   /**
-    * A method that checks whose turn it is to play the game.
-    */
-   public void changePlayer() {
-      card2.setText(String.valueOf(card2.getId()));
-      if (card1.getId() == card2.getId()) {
-         if (player == 1) {
-            player1S.setText("" + ++player1Score);
-         } 
-         else if(player == 2){
-            player2S.setText("" + ++player2Score);
+      }
+      else
+      if ( card1 != selectedCard ) {
+    	  selectedCard.setText(String.valueOf(selectedCard.getId()));
+          selectedCard.setUpColor(currentColor);
+    	  selectedCard.flip(true);
+
+         int index1 = cards.indexOf(card1);
+         int index2 = cards.indexOf(selectedCard);
+         
+         card1=null;
+         myTurn=false;
+
+   	  	setTitle("");
+
+         
+   	  	System.out.println("Move "+index1+" "+index2);
+
+   	  
+         try{
+            dos.writeInt(MOVE_PAIR);
+            dos.writeInt(index1);
+            dos.writeInt(index2);
          }
-         else if(player == 3){
-            player3S.setText("" + ++player3Score);
+         catch(IOException ioe){
+            ioe.printStackTrace();
          }
          
-         else if(player == 4) {
-            player4S.setText("" + ++player4Score);
-         }
-      } else if (card1.getId() != card2.getId() && player == 1) {
-         player = 2;
-         card1.flip();
-         card2.flip();
-         setTitle("Memory Game (Player 2)");
-         JOptionPane.showMessageDialog(null,"It's Player 2's turn.");
-      }  else if (card1.getId() != card2.getId() && player == 2) {
-         player = 3;
-         card1.flip();
-         card2.flip();
-         setTitle("Memory Game (Player 3)");
-         JOptionPane.showMessageDialog(null,"It's Player 3's turn.");
-      }  else if (card1.getId() != card2.getId() && player == 3) {
-         player = 4;
-         card1.flip();
-         card2.flip();
-         setTitle("Memory Game (Player 4)");
-         JOptionPane.showMessageDialog(null,"It's Player 4's turn.");
       }
-      
-      else {
-         player = 1;
-         card1.flip();
-         card2.flip();
-         setTitle("Memory Game (Player 1)");
-         JOptionPane.showMessageDialog(null,"It's Player 1's turn.");
-         
-      }
+	   
    }
 
-   /**
-    * A method that checks which player won by comparing the scores.
-    */
-   public void checkCards() {
-      if (card1.getId() == card2.getId()) {
-         card1.setEnabled(false);
-         card2.setEnabled(false);
-         card1.setMatched(true);
-         card2.setMatched(true);
-         if (this.isGameWon()) {
-            if (player1Score > player2Score && player1Score > player3Score && player1Score > player4Score) {
-               JOptionPane.showMessageDialog(this, "Player 1 wins with a score of " + player1Score + "! " + "Click start to play again.");
-               System.exit(0);
-            } else if (player2Score > player1Score && player2Score > player3Score && player2Score > player4Score) {
-               JOptionPane.showMessageDialog(this, "Player 2 wins with a score of " + player2Score + "! " + "Click start to play again.");
-               System.exit(0);
-            }else if (player3Score > player1Score && player3Score > player2Score && player3Score > player4Score){
-               JOptionPane.showMessageDialog(this, "Player 3 wins with a score of " + player3Score + "! " + "Click start to play again.");
-               System.exit(0);
-            }else if (player4Score > player1Score && player4Score > player2Score && player4Score > player3Score){
-               JOptionPane.showMessageDialog(this, "Player 4 wins with a score of " + player4Score + "! " + "Click start to play again.");
-               System.exit(0);   
-            
-            } else {
-               JOptionPane.showMessageDialog(this, "Its a tie with four players at" + player1Score + "matches! " + "Click start to play again.");
-               System.exit(0);
-            }
-         }
-      }
-      else {
-         card1.setText("");
-         card2.setText("");
-      }
-      card1 = null;
-      card2 = null;
-   }
-
-   /**
-    * A method that checks who won the game
-    */
-   public boolean isGameWon() {
-      for (Card c : this.cards) {
-         if (c.getMatched() == false) {
-            return false;
-         }
-      }
-      return true;
-   }
-   
    /**
    A method that makes initial connection with the server
    Creates Client Thread
@@ -486,7 +441,6 @@ public class MemoryGame extends JFrame implements ActionListener {
         public void run() {    
          dis = new DataInputStream(inputStream);
          int number;
-         boolean turnValidate;
          
          try{
             while((number =dis.readInt()) != -1){
@@ -498,7 +452,12 @@ public class MemoryGame extends JFrame implements ActionListener {
                            number = dis.readInt();
                            cardValues.add(number);
                            Card card = new Card(cardTimer);
-                           card.setId(number); 
+                           card.setId(number);
+                           if(number==-1)
+                           {
+                        	   card.setMatched(true);
+                        	   card.flip(true);
+                           }
                            jpCenter.add(card);
                            cards.add(card);
                            card.addActionListener(acl_Card);
@@ -507,33 +466,100 @@ public class MemoryGame extends JFrame implements ActionListener {
                         break;
                      
                      }
-                  case TURN: {
-                     turnNumber = dis.readInt();
+                  case MY_TURN: {
+                	  System.out.println("my turn");
+                	  myTurn=true;
+                	  
+                	  setTitle("Your Turn");
+                     /*
+                	  turnNumber = dis.readInt();
                      turnValidate = dis.readBoolean();
                      jpCenter.setEnabled(turnValidate);
                      currentColor = playerColors[turnNumber];
-                     
+					*/
                       break;
            
                   }
-                  case MOVE_INT:
-                     {
-                        int cardIndex = dis.readInt();
-                        Card o = cards.get(cardIndex);
-                        break;
-                     }
-                 case SCORE: {
-                     int score = dis.readInt();
-                     scoreField[turnNumber].setText("" + score);
-                 
-                 }
-                     
-                  case MSG:
+                  
+                  case SHOW_PAIR:
+                  {
+                      int cardIndex1 = dis.readInt();
+                      int cardIndex2 = dis.readInt();
+                      Card o1 = cards.get(cardIndex1);
+                      Card o2 = cards.get(cardIndex2);
+                      
+                	  System.out.println("Show "+cardIndex1+" "+cardIndex2);
+                	                       
+
+                      o1.flip(true);
+                      o1.setMatched(true);
+                      o2.flip(true);
+                      o2.setMatched(true);
+
+
+
+                      break;
+                  }
+                  
+                  case HIDE_PAIR:
+                  {
+                      int cardIndex1 = dis.readInt();
+                      int cardIndex2 = dis.readInt();
+                      Card o1 = cards.get(cardIndex1);
+                      Card o2 = cards.get(cardIndex2);
+                      
+                	  System.out.println("Hide "+cardIndex1+" "+cardIndex2);
+                      
+                	  o1.setUpColor(Color.RED);
+                      o1.flip(false);
+                      o2.setUpColor(Color.RED);
+                      o2.flip(false);
+
+
+                      break;
+                  }
+
+                  case MESSAGE:
                      {
                         String message = dis.readUTF();
                         chatArea.append("\n" + message);
+                   	 System.out.println(message);
                         break;
                      }
+
+                  case SCORES:
+                  {
+                  	 player1S.setText(dis.readInt()+"");
+                 	 player1.setText(dis.readUTF());
+                 	 
+                 	 player2S.setText(dis.readInt()+"");
+                 	 player2.setText(dis.readUTF());
+
+                 	 player3S.setText(dis.readInt()+"");
+                 	 player3.setText(dis.readUTF());
+                 	 
+                 	 player4S.setText(dis.readInt()+"");
+                 	 player4.setText(dis.readUTF());
+                                         	 
+                     break;
+                  }
+                  
+                  case STATE:
+                  {
+                	  statelabel.setText(dis.readUTF());
+                                         	 
+                     break;
+                  }
+                     
+                     
+                     
+                     
+                 case ERROR:
+                 {
+                    String message = dis.readUTF();
+                    chatArea.append("\n" + message);
+                    break;
+                 }
                   
                }
             

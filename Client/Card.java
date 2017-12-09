@@ -3,7 +3,6 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.TimerTask;
-
 /**
  * A component containing information
  * and animations for a card
@@ -11,6 +10,7 @@ import java.util.TimerTask;
  * @author Kajal Nagrani & Winston Chang
  * @since 2017-10-15
  */
+
 public class Card extends JComponent implements MouseListener {
     private ArrayList<ActionListener> actionListeners = new ArrayList<ActionListener>();
     private int id;
@@ -101,8 +101,8 @@ public void setUpColor(Color c){
     /**
      * Starts the flip animation
      */
-    public void flip() {
-        flip = true;
+    public void flip(boolean flip) {
+        this.flip = flip;
         width = getDrawWidth();
         height = getDrawHeight();
         x = 2;
@@ -118,11 +118,12 @@ public void setUpColor(Color c){
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        label.setVisible(true);
-
+        label.setVisible(flip);
+        //label.setVisible(true);
+        label.setForeground(flip?Color.BLACK:Color.GRAY);
         // Draw background
         g.setColor(label.isVisible() ? upColor : downColor);
-        g.fillRect(x, y, width, height);
+        //g.fillRect(x, y, width, height);
 
         // Set border color
         if (flip) {
@@ -149,7 +150,6 @@ public void setUpColor(Color c){
     public void mouseClicked(MouseEvent e) {
         for (ActionListener listener : actionListeners)
             listener.actionPerformed(ae);
-        flip();
     }
 
     @Override
@@ -193,7 +193,6 @@ public void setUpColor(Color c){
 
             if (width >= getWidth()) {
                 running = false;
-                flip = false;
                 repaint();
                 cancel();
             }
