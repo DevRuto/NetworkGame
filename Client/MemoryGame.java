@@ -17,17 +17,15 @@ import java.net.Socket;
 import javafx.scene.input.Mnemonic;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
-
-
-
 import java.awt.event.*;
 
 /**
  * A memory game where two players compete
  * to match as many cards as possible
  *
- * @author Kajal Nagrani & Winston Chang
- * @since 2017-10-15
+ * @author Kajal Nagrani, Winston Chang, Alex Kramer, Caleb Maynard, Aiden Lin
+ * @since 2017-12-08
+ * @version 1.0
  */
 public class MemoryGame extends JFrame implements ActionListener {
    //Attributes
@@ -49,15 +47,12 @@ public class MemoryGame extends JFrame implements ActionListener {
    private JTextField player3S = new JTextField(3);
    private JTextField player4S = new JTextField(3);
    
-   
-   
+   private JTextField [] scoreField = {player1S, player2S, player3S, player4S};
+
    private JLabel player1 = new JLabel("Player 1: ");
    private JLabel player2 = new JLabel("Player 2: ");
    private JLabel player3 = new JLabel("Player 3: ");
    private JLabel player4 = new JLabel("Player 4: ");
-   
-
-
 
    private JTextArea jta = new JTextArea(20,20);
    private JTextField jtf = new JTextField(20);
@@ -75,14 +70,28 @@ public class MemoryGame extends JFrame implements ActionListener {
    public static final int JOIN_LOBBY = 2;
    public static final int MOVE_INT = 3;
    public static final int MSG = 4;
-   
+   public static final int TURN = 5;
+   public static final int SCORE = 6;
+   public static final Color [] playerColors = {Color.BLUE,Color.GREEN,Color.ORANGE,Color.CYAN};
    //private JButton jbReset  = new JButton("Reset");
    private JButton jbExit  = new JButton("Exit");
    private JButton jbHelp  = new JButton("Help");
    private JButton[] jbList = new JButton[64];
    private int[] setUp;
    private  List<Integer> cardValues = new ArrayList<Integer>();
+   private ActionListener acl_Card = 
+      new ActionListener() { 
+         public void actionPerformed(ActionEvent ae) {
+            selectedCard = (Card) ae.getSource();
+            selectedCard.setUpColor(currentColor);
+            doTurn();
+            System.out.println("this works");
+         }
+      };
+  private int turnNumber;
+  private Color currentColor;
    /**
+   
     * Start the game
     */
    public static void main(String[] args) {
@@ -93,12 +102,10 @@ public class MemoryGame extends JFrame implements ActionListener {
     * Set up the game
     */
    public MemoryGame() {
-   
       setSize(800, 500);
       setLocationRelativeTo(null);
       setResizable(false);
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-   
       List<Card> cardsList = new ArrayList<Card>();
      
    
@@ -115,7 +122,6 @@ public class MemoryGame extends JFrame implements ActionListener {
       //Creates a for loop that adds the cards randomly on the board
    
       timer = new Timer(5,this);
-   
       timer.setRepeats(false);
    
       // create a main new JPanel(jpNorth)
@@ -128,9 +134,9 @@ public class MemoryGame extends JFrame implements ActionListener {
       JPanel textNorth = new JPanel();
       
       player1S.setEnabled(false);
-   player2S.setEnabled(false);
-   player3S.setEnabled(false);
-   player4S.setEnabled(false);
+      player2S.setEnabled(false);
+      player3S.setEnabled(false);
+      player4S.setEnabled(false);
         
       textNorth.add(player1);
       textNorth.add(player1S);
@@ -140,9 +146,7 @@ public class MemoryGame extends JFrame implements ActionListener {
       textNorth.add(player3S);
       textNorth.add(player4);
       textNorth.add(player4S);
-      
-      
-   
+
       /* create a JPanel(subnorth) inside the other JPanel(jpNorth).
        * add the buttons to the jpSubnorth, then add it to the jpNorth
        */
@@ -168,8 +172,6 @@ public class MemoryGame extends JFrame implements ActionListener {
       * set the background to red
       */
       jpCenter = new JPanel(new GridLayout(8, 8));
-   
-      
       JPanel chat = new JPanel();
       chat.setLayout(new GridBagLayout());
       
@@ -233,14 +235,9 @@ public class MemoryGame extends JFrame implements ActionListener {
         // Set up default behaviors
         
       chat.setSize(400, 400);
-      chat.setMinimumSize(new Dimension(300, 300));
-      
+      chat.setMinimumSize(new Dimension(300, 300));  
       jpCenter.setBackground(Color.red);
       add(chat, BorderLayout.EAST);
-      
-      
-   
-      
       add(jpCenter, BorderLayout.CENTER);
       // add(chat, BorderLayout.EAST);
       
@@ -252,16 +249,7 @@ public class MemoryGame extends JFrame implements ActionListener {
                System.exit(0);
             }
          });
-      // reset button
-      // jbReset.addActionListener(
-//          new ActionListener() {
-//             public void actionPerformed(ActionEvent ae) {
-//                new MemoryGame();
-//                setVisible(false);
-//                Collections.shuffle(cardValues);
-//             }
-//          });
-      // help button
+   
       jbHelp.addActionListener(
          new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
@@ -438,12 +426,9 @@ public class MemoryGame extends JFrame implements ActionListener {
       try {
          socket = new Socket(ip, 12345);
          readerThread = new ReadThread(socket.getInputStream());
-         readerThread.start();
-         
+         readerThread.start();   
          dos = new DataOutputStream(socket.getOutputStream());
-      
-         chatArea.append("Connected to Server" + System.lineSeparator());
-         
+         chatArea.append("Connected to Server" + System.lineSeparator()); 
          messageBox.setEnabled(true);
          sendBtn.setEnabled(true);
          
@@ -452,7 +437,10 @@ public class MemoryGame extends JFrame implements ActionListener {
       
       }
    }
-   
+ /*
+ * Sends value to server that indicates that the client needs the numbers for the board    
+ * 
+ */
    private void boardSetup(){
       try{
       
@@ -480,10 +468,8 @@ public class MemoryGame extends JFrame implements ActionListener {
  /**
  */
    class ReadThread extends Thread {
-      private InputStream inputStream;
-      
+      private InputStream inputStream; 
       private DataInputStream dis;
-      
       
         /**
          * Initialize thread for reading
@@ -497,12 +483,10 @@ public class MemoryGame extends JFrame implements ActionListener {
          * Start reading from server
          */
       @Override
-        public void run() {
-        
-      
+        public void run() {    
          dis = new DataInputStream(inputStream);
-         
          int number;
+         boolean turnValidate;
          
          try{
             while((number =dis.readInt()) != -1){
@@ -514,42 +498,41 @@ public class MemoryGame extends JFrame implements ActionListener {
                            number = dis.readInt();
                            cardValues.add(number);
                            Card card = new Card(cardTimer);
-                           card.setId(number);
-                            
+                           card.setId(number); 
                            jpCenter.add(card);
                            cards.add(card);
-                          
-                           card.addActionListener(
-                              new ActionListener() {
-                                 public void actionPerformed(ActionEvent ae) {
-                                    selectedCard = card;
-                                    doTurn();
-                                    System.out.println("this works");
-                                 }
-                              });
-                        
-                          
-                          
+                           card.addActionListener(acl_Card);
                            System.out.println(number);
-                        
-                        
                         }
+                        break;
                      
                      }
+                  case TURN: {
+                     turnNumber = dis.readInt();
+                     turnValidate = dis.readBoolean();
+                     jpCenter.setEnabled(turnValidate);
+                     currentColor = playerColors[turnNumber];
+                     
+                      break;
+           
+                  }
                   case MOVE_INT:
                      {
-                        
                         int cardIndex = dis.readInt();
                         Card o = cards.get(cardIndex);
-                     
+                        break;
                      }
+                 case SCORE: {
+                     int score = dis.readInt();
+                     scoreField[turnNumber].setText("" + score);
+                 
+                 }
                      
                   case MSG:
                      {
                         String message = dis.readUTF();
                         chatArea.append("\n" + message);
-                     
-                     
+                        break;
                      }
                   
                }
@@ -559,9 +542,7 @@ public class MemoryGame extends JFrame implements ActionListener {
          } catch(IOException ioe){
             ioe.printStackTrace();
          }
-      
-        
+
       }
    }
 }
-
