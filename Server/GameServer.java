@@ -82,6 +82,7 @@ class GameServer {
         		currentTurn=client;
         	
             clients.add(client);
+            client.setPlayerNum(clients.size()-1);
             client.setIdentifier("Player#" + clients.size());
             broadcast(Protocol.MESSAGE,client.getIdentifier() + " has connected");
             
@@ -222,7 +223,8 @@ class GameServer {
         }
         else
         {
-        	broadcast(Protocol.STATE,"Current Turn "+currentTurn.getIdentifier());
+            broadcast(Protocol.STATE,"Current Turn "+currentTurn.getIdentifier());
+            broadcastInt(Protocol.TURNSTATE, currentTurn.getPlayerNum());
         }
         
 	    
@@ -234,6 +236,15 @@ class GameServer {
         synchronized (clients) {
             for (Client c : clients) {
                 c.write(type,text);
+            }
+        }
+    }
+
+    private void broadcastInt(int code, int i) {
+        synchronized (clients) {
+            broadcastInt(code);
+            for (Client c : clients) {
+                c.writeInt(i);
             }
         }
     }
@@ -259,6 +270,7 @@ class GameServer {
         private Socket socket;
         private DataOutputStream writer;
         private String identifier;
+        private int playerNum;
         
         public int score;
 
@@ -275,6 +287,14 @@ class GameServer {
 
         public String getIdentifier() {
             return identifier;
+        }
+
+        public void setPlayerNum(int num) {
+            this.playerNum = num;
+        }
+
+        public int getPlayerNum() {
+            return playerNum;
         }
 
         @Override
@@ -317,7 +337,9 @@ class GameServer {
 
                             
                         	broadcast(Protocol.MESSAGE,"Name "+identifier+" renamed to "+newidentifier);
-
+                            synchronized (clients) {
+                                ids.remove(identifier);
+                            }
                             identifier=newidentifier;                            
                             
                             write(Protocol.STATE,identifier);

@@ -16,6 +16,7 @@ class Protocol {
 	public static final int SHOW_PAIR = 11;
 	public static final int HIDE_PAIR = 12;
 	public static final int STATE = 13;
+	public static final int TURNSTATE = 14;
 
 	public static final int ERROR= 100;
 }

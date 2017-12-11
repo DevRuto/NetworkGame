@@ -78,6 +78,7 @@ public class MemoryGame extends JFrame implements ActionListener {
 	public static final int SHOW_PAIR = 11;
 	public static final int HIDE_PAIR = 12;
 	public static final int STATE = 13;
+  public static final int TURNSTATE = 14;
 	
 	
 
@@ -550,7 +551,11 @@ public class MemoryGame extends JFrame implements ActionListener {
                                          	 
                      break;
                   }
-                     
+                  case TURNSTATE:
+                  {
+                    turnNumber = dis.readInt();
+                    currentColor = playerColors[turnNumber];
+                  }
                      
                      
                      
