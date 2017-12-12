@@ -1,16 +1,20 @@
+/*
+ * Card.java
+ *
+ * @author Kajal Nagrani, Winston Chang, Alex Kramer, Caleb Maynard, Aiden Lin
+ * @since 2017-12-08
+ * @version 1.0
+ */
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.TimerTask;
+
 /**
  * A component containing information
  * and animations for a card
- *
- * @author Kajal Nagrani & Winston Chang
- * @since 2017-10-15
  */
-
 public class Card extends JComponent implements MouseListener {
     private ArrayList<ActionListener> actionListeners = new ArrayList<ActionListener>();
     private int id;
