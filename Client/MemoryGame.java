@@ -28,6 +28,7 @@ import java.awt.event.*;
 
 public class MemoryGame extends JFrame implements ActionListener {
    //Attributes
+   private int cardRowNum = 6;
    private List<Card> cards = new ArrayList<Card>();
    private Card card1=null;
 
@@ -186,7 +187,7 @@ public class MemoryGame extends JFrame implements ActionListener {
       * add the cards in the jpCenter, add the JPanel to JFrame
       * set the background to red
       */
-      jpCenter = new JPanel(new GridLayout(8, 8));
+      jpCenter = new JPanel(new GridLayout(cardRowNum, cardRowNum));
       JPanel chat = new JPanel();
       chat.setLayout(new GridBagLayout());
       
@@ -449,7 +450,7 @@ public class MemoryGame extends JFrame implements ActionListener {
                   case BOARD_NUMBERS: 
                      {
                      
-                        for(int i=0; i < 64;i++){
+                        for(int i=0; i < cardRowNum^2;i++){
                            number = dis.readInt();
                            cardValues.add(number);
                            Card card = new Card(cardTimer);
