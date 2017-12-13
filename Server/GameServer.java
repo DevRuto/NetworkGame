@@ -20,7 +20,7 @@ class GameServer {
     private final ArrayList<Integer> boardNums = new ArrayList<Integer>();
 
     private ServerSocket server;
-    private final int boardNum = 36;
+   
     private Client currentTurn = null;
 
     /**
@@ -38,7 +38,8 @@ class GameServer {
      */
     public GameServer(int port) {
         // Generate board number at start
-        for (int i = 0; i < boardNum; i++) {
+        for (int i = 0; i < 18; i++) {
+            boardNums.add(i);
             boardNums.add(i);
         }
         // Shuffle numbers
@@ -370,7 +371,7 @@ class GameServer {
 
                         broadcast(Protocol.MESSAGE, String.format("[%s RECEIVED BOARD NUMBERS]", identifier));
                         // Change boardNum to change size of board
-                        int size = boardNum; //reader.readInt();
+                        int size = 36; //reader.readInt();
                         // Warns clients that they will receive board numbers
                         writeInt(Protocol.BOARD_NUMBERS);
 
