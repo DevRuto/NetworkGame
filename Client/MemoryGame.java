@@ -110,7 +110,7 @@ public class MemoryGame extends JFrame implements ActionListener {
 
         //Displays an instruction menu of how to play the memory card game
         JOptionPane.showMessageDialog(this, "Instructions:  " +
-                                      "Click on two of the buttons and if they have the same value you gain a point. " +
+                                      "Click on two of the card and if they have the same value you gain a point. " +
                                       "Clear the board and the player with the most matches wins.");
 
         ip = (String) JOptionPane.showInputDialog(this,
@@ -377,6 +377,7 @@ public class MemoryGame extends JFrame implements ActionListener {
             ioe.printStackTrace();
         }
     }
+
     /**
      * A class to add additional startup behaviors
      */
@@ -390,7 +391,6 @@ public class MemoryGame extends JFrame implements ActionListener {
             messageBox.requestFocus();
         }
     }
-
 
     /**
      * Handles the reading from the server

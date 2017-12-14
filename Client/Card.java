@@ -44,11 +44,14 @@ public class Card extends JComponent implements MouseListener {
         addMouseListener(this);
     }
 
-public void setUpColor(Color c){
-   upColor = c;
+    /**
+     * Set the color of the face up card
+     * @param c the face up color
+     */
+    public void setUpColor(Color c){
+       upColor = c;
+    }
 
-
-}
     /**
      * The identifier of the card
      * @param id The identifier of the card
@@ -126,8 +129,8 @@ public void setUpColor(Color c){
         //label.setVisible(true);
         label.setForeground(flip?Color.BLACK:Color.GRAY);
         // Draw background
-        g.setColor(label.isVisible() ? upColor : downColor);
-        //g.fillRect(x, y, width, height);
+        g.setColor(label.isVisible() ? Color.CYAN : downColor);
+        g.fillRect(x, y, width, height);
 
         // Set border color
         if (flip) {
