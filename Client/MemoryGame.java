@@ -484,7 +484,11 @@ public class MemoryGame extends JFrame implements ActionListener {
                         break;
                     case Protocol.STATE:
                         // Change the state
-                        statelabel.setText(dis.readUTF());
+                        String s = dis.readUTF();
+                        statelabel.setText(s);
+                        if (s.startsWith("Winner") || s.startsWith("Draw")) {
+                            JOptionPane.showMessageDialog(null, s);
+                        }
                         break;
                     case Protocol.ERROR: {
                             // Print any errors to client

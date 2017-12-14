@@ -287,19 +287,6 @@ class GameServer {
     }
 
     /**
-     * Start the game with a player
-     * @param startPlayer the playeer to start with
-     */
-    private void initGame(int startPlayer) {
-        synchronized (clients) {
-            for (Client c : clients) {
-                // IF index of c inside clients == startPlayer, send 1, otherwise send 0
-                c.writeInt(clients.indexOf(c) == startPlayer ? 1 : 0);
-            }
-        }
-    }
-
-    /**
      * The thread that handles a client
      */
     class Client extends Thread {
@@ -368,7 +355,6 @@ class GameServer {
                     System.out.printf("%s: CODE: %d%n", identifier, code);
                     switch (code) {
                     case Protocol.BOARD_NUMBERS:
-
                         broadcast(Protocol.MESSAGE, String.format("[%s RECEIVED BOARD NUMBERS]", identifier));
                         // Change boardNum to change size of board
                         int size = 36; //reader.readInt();
@@ -401,19 +387,6 @@ class GameServer {
                             write(Protocol.STATE, identifier);
 
                             SendScores();
-                        }
-                        break;
-                    case Protocol.JOIN_LOBBY:
-                        broadcastInt(Protocol.JOIN_LOBBY);
-                        broadcastInt(clients.size());
-                        if (clients.size() == 4) {
-                            // Choose a player that starts the game
-                            int start = ThreadLocalRandom.current().nextInt(0, clients.size());
-                            // Check initGame doc
-                            initGame(start);
-                        } else {
-                            // GAME NOT STARTING
-                            broadcastInt(-1);
                         }
                         break;
                     case Protocol.MOVE_PAIR:
