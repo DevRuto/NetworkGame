@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * The game server that connects MemoryGame clients
  */
-class GameServer {
+public class GameServer {
     private final ArrayList<Client> clients = new ArrayList<Client>();
     private final ArrayList<String> ids = new ArrayList<String>();
     private final ArrayList<Integer> boardNums = new ArrayList<Integer>();
@@ -289,7 +289,7 @@ class GameServer {
     /**
      * The thread that handles a client
      */
-    class Client extends Thread {
+    public class Client extends Thread {
         private Socket socket;
         private DataOutputStream writer;
         private String identifier;

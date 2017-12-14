@@ -10,7 +10,7 @@
  * A list of protocol codes to
  * communicate with the srever
  */
-class Protocol {
+public class Protocol {
 	public static final int NAME = 0;
 	public static final int BOARD_NUMBERS = 1;
 

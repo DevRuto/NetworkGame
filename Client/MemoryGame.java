@@ -395,7 +395,7 @@ public class MemoryGame extends JFrame implements ActionListener {
     /**
      * Handles the reading from the server
      */
-    class ReadThread extends Thread {
+    public class ReadThread extends Thread {
         private InputStream inputStream;
         private DataInputStream dis;
 
