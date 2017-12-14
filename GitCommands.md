@@ -8,7 +8,7 @@ git clone https://github.com/nullruto/NetworkGame
 ### How to add files to be watched by the repo
 *Files are not automatically added into the local repo, new files need to be added manually*
 
-**Files in [gitignore](https://github.com/nullruto/NetworkGame/blob/dev/.gitignore) are ignored**
+**Files in [gitignore](https://github.com/rutokz/NetworkGame/blob/dev/.gitignore) are ignored**
 ```bash
 # Add multiple files manually
 git add <file1> <file2>
