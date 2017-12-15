@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.swing.*;
-
+import javax.swing.text.DefaultCaret;
 /**
  * The game server that connects MemoryGame clients
  */
@@ -55,7 +55,11 @@ public class GameServer {
         JFrame serverJF = new JFrame();
         JPanel mainJP = new JPanel();
        
-        mainJP.add(jta);
+        DefaultCaret caret = (DefaultCaret) jta.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+         JScrollPane spane = new JScrollPane(jta);
+         
+        mainJP.add(spane);
         serverJF.add(mainJP);
        
         
