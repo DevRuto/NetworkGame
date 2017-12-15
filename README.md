@@ -1,2 +1,3 @@
 # NetworkGame
-## [How to use Git](https://github.com/nullruto/NetworkGame/blob/dev/GitCommands.md)
+## [Client](https://github.com/RutoKZ/NetworkGame/tree/dev/Client)
+## [Server](https://github.com/RutoKZ/NetworkGame/tree/dev/Server)
