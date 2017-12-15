@@ -64,7 +64,7 @@ public class GameServer {
        
         
         serverJF.pack();
-        serverJF.setSize(500,500);
+        serverJF.setSize(500,700);
         serverJF.setLocationRelativeTo(null);
         serverJF.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         serverJF.setVisible(true);
