@@ -28,7 +28,6 @@ public class GameServer {
      */
     public static void main(String[] args) throws UnknownHostException {
         GameServer server = new GameServer(12345);
-        System.out.println("Server started on port: " + server.getPort());
         server.start();
     }
 
@@ -47,6 +46,7 @@ public class GameServer {
         // Try to start the server
         try {
             server = new ServerSocket(port);
+            jta.append("Server started on port: " + server.getPort() + "\n");
         } catch (IOException e) {
             jta.append("Error creating server socket: " + e.getMessage()+"\n");
             e.printStackTrace();
