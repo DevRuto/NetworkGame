@@ -27,7 +27,7 @@ public class Card extends JComponent implements MouseListener {
     private boolean halfPoint = false;
     private boolean running = false;
     private ActionEvent ae = new ActionEvent(this,3,"string");
-    private Color downColor = Color.red;
+    private Color downColor = Color.green;
     private Color upColor = Color.blue;
 
     /**
