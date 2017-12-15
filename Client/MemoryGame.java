@@ -233,7 +233,7 @@ public class MemoryGame extends JFrame implements ActionListener {
 
         chat.setSize(400, 400);
         chat.setMinimumSize(new Dimension(300, 300));
-        jpCenter.setBackground(Color.red);
+        jpCenter.setBackground(Color.green);
         add(chat, BorderLayout.EAST);
         add(jpCenter, BorderLayout.CENTER);
         // add(chat, BorderLayout.EAST);
