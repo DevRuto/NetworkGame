@@ -10,6 +10,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
+import javax.swing.*;
 
 /**
  * The game server that connects MemoryGame clients
@@ -18,10 +19,9 @@ public class GameServer {
     private final ArrayList<Client> clients = new ArrayList<Client>();
     private final ArrayList<String> ids = new ArrayList<String>();
     private final ArrayList<Integer> boardNums = new ArrayList<Integer>();
-
     private ServerSocket server;
-   
     private Client currentTurn = null;
+    private JTextArea jta = new JTextArea(30,30);
 
     /**
      * The main method
@@ -48,9 +48,24 @@ public class GameServer {
         try {
             server = new ServerSocket(port);
         } catch (IOException e) {
-            System.out.println("Error creating server socket: " + e.getMessage());
+            jta.append("Error creating server socket: " + e.getMessage()+"\n");
             e.printStackTrace();
         }
+        
+        JFrame serverJF = new JFrame();
+        JPanel mainJP = new JPanel();
+       
+        mainJP.add(jta);
+        serverJF.add(mainJP);
+       
+        
+        serverJF.pack();
+        serverJF.setSize(500,500);
+        serverJF.setLocationRelativeTo(null);
+        serverJF.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        serverJF.setVisible(true);
+        
+        
     }
 
     /**
@@ -70,13 +85,13 @@ public class GameServer {
         try {
             // Continue to listen for clients
             while ((s = server.accept()) != null) {
-                System.out.println("Accepted client");
+                jta.append("Accepted client"+"\n");
                 // Handle clients in new thread
                 c = new Client(s);
                 c.start();
             }
         } catch (IOException e) {
-            System.out.println("Error accepting socket: " + e.getMessage());
+            jta.append("Error accepting socket: " + e.getMessage()+"\n");
             e.printStackTrace();
         }
     }
@@ -252,7 +267,7 @@ public class GameServer {
      * @param text the message itself
      */
     private void broadcast(int code, String text) {
-        System.out.printf("BROADCASTING: %s%n", text);
+        jta.append("BROADCASTING: " + text +"\n");
         synchronized (clients) {
             for (Client c : clients) {
                 c.write(code, text);
@@ -345,14 +360,14 @@ public class GameServer {
          */
         @Override
         public void run() {
-            System.out.println("Thread started");
+            jta.append("Thread started"+"\n");
             try {
                 DataInputStream reader = new DataInputStream(socket.getInputStream());
 
                 // Switch between the code we read
                 int code;
                 while ((code = reader.readInt()) != -1) {
-                    System.out.printf("%s: CODE: %d%n", identifier, code);
+                    jta.append("CODE: " + identifier + "  " + code+"\n");
                     switch (code) {
                     case Protocol.BOARD_NUMBERS:
                         broadcast(Protocol.MESSAGE, String.format("[%s RECEIVED BOARD NUMBERS]", identifier));
@@ -418,7 +433,7 @@ public class GameServer {
                 writer.writeInt(type);
                 writer.writeUTF(text);
             } catch (Exception ex) {
-                System.out.println("Error occured for " + identifier);
+                jta.append("Error occured for " + identifier+"\n");
                 ex.printStackTrace();
             }
         }
@@ -431,7 +446,7 @@ public class GameServer {
             try {
                 writer.writeInt(i);
             } catch (Exception ex) {
-                System.out.println("Error occured for " + identifier);
+                jta.append("Error occured for " + identifier +"\n");
                 ex.printStackTrace();
             }
         }
@@ -444,7 +459,7 @@ public class GameServer {
             try {
                 writer.writeUTF(i);
             } catch (Exception ex) {
-                System.out.println("Error occured for " + identifier);
+                jta.append("Error occured for " + identifier +"\n");
                 ex.printStackTrace();
             }
         }
